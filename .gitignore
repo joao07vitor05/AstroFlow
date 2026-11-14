@@ -1,0 +1,42 @@
+# ---------- Segredos e ambiente ----------
+.env
+.env.*
+!.env.example
+
+# ---------- Python ----------
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+
+# ---------- Cache de ferramentas ----------
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+coverage.xml
+
+# ---------- Jupyter ----------
+.ipynb_checkpoints/
+
+# ---------- Dados locais ----------
+data/
+*.parquet
+*.csv
+!tests/fixtures/*.csv
+
+# ---------- Editor e sistema operacional ----------
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# ---------- Node (para quando entrar o frontend) ----------
+node_modules/
+
+# ---------- Airflow (para quando entrar) ----------
+airflow/logs/
+logs/
