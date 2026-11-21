@@ -1,10 +1,11 @@
-import os
+from datetime import date, timedelta
 
 import psycopg
 import requests
 from dotenv import load_dotenv
 from psycopg.types.json import Jsonb
-from datetime import date, timedelta
+
+from astroflow.config import get_connection
 
 load_dotenv()
 
@@ -26,14 +27,14 @@ CREATE TABLE IF NOT EXISTS bronze.cad_raw (
 
 CONSULTAS = {
     "cad_terra": {
-        "dias_a_frente": 60,    # tamanho da janela; as datas são calculadas ao rodar
+        "dias_a_frente": 60,  # tamanho da janela; as datas são calculadas ao rodar
         "params": {
-            "dist-max": "0.05",   # em au (unidade astronômica)
+            "dist-max": "0.05",  # em au (unidade astronômica)
             "body": "Earth",
             "neo": "true",
-            "sort": "date",       # explícito, para a ordem não depender do padrão da API
-            "diameter": "true",   # inclui diameter e diameter_sigma
-            "fullname": "true",   # inclui o nome completo do objeto
+            "sort": "date",  # explícito, para a ordem não depender do padrão da API
+            "diameter": "true",  # inclui diameter e diameter_sigma
+            "fullname": "true",  # inclui o nome completo do objeto
         },
     },
     # Exemplo de uma segunda consulta (descomente para usar):
@@ -55,25 +56,15 @@ CONSULTAS = {
 def montar_params(nome: str, hoje: date | None = None) -> dict:
     """Monta os parâmetros finais de uma consulta, já com datas reais."""
     config = CONSULTAS[nome]
-    hoje = hoje or date.today()                       # se não passar data, usa a de hoje
+    hoje = hoje or date.today()  # se não passar data, usa a de hoje
     fim = hoje + timedelta(days=config["dias_a_frente"])
 
     # {**a, "x": 1} cria um dicionário novo com tudo de "a" mais as chaves extras
     return {
         **config["params"],
-        "date-min": hoje.isoformat(),                 # ex.: "2026-11-17"
-        "date-max": fim.isoformat(),                  # ex.: "2027-01-16"
+        "date-min": hoje.isoformat(),  # ex.: "2026-11-17"
+        "date-max": fim.isoformat(),  # ex.: "2027-01-16"
     }
-
-
-def get_connection() -> psycopg.Connection:
-    return psycopg.connect(
-        host=os.getenv("POSTGRES_HOST", "localhost"),
-        port=os.getenv("POSTGRES_PORT", "5436"),
-        dbname=os.getenv("POSTGRES_DB"),
-        user=os.getenv("POSTGRES_USER"),
-        password=os.getenv("POSTGRES_PASSWORD"),
-    )
 
 
 def fetch_cad(params: dict) -> requests.Response:
@@ -82,8 +73,9 @@ def fetch_cad(params: dict) -> requests.Response:
     return response
 
 
-def save_raw(conn: psycopg.Connection, source: str, params: dict,
-             response: requests.Response) -> None:
+def save_raw(
+    conn: psycopg.Connection, source: str, params: dict, response: requests.Response
+) -> None:
     payload = response.json()  # sem chave para limpar, o texto já é seguro
 
     versao = payload["signature"]["version"]
@@ -109,7 +101,7 @@ def main() -> None:
         conn.commit()
 
         for nome in CONSULTAS:
-            params = montar_params(nome)   
+            params = montar_params(nome)
             response = fetch_cad(params)
             qtd = response.json()["count"]
             print(f"{nome}: {qtd} aproximações")

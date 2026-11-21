@@ -45,6 +45,7 @@ select = [
     "B",        # bugs comuns (bugbear)
     "UP",       # sintaxe moderna do Python
 ]
+ignore = ["E741"]
 
 [tool.ruff.format]
 quote-style = "double"

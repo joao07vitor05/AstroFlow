@@ -44,7 +44,8 @@ FROM (
 ) AS todos
 WHERE des IS NOT NULL
 ORDER BY des, prioridade
-ON CONFLICT (des) DO NOTHING;  -- rodar de novo não duplica
+ON CONFLICT (des) DO UPDATE
+SET fullname = COALESCE(EXCLUDED.fullname, silver.asteroide.fullname);
 """
 
 

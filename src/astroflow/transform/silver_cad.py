@@ -7,14 +7,36 @@ from astroflow.transform.conversores import para_float, para_int
 
 # Campos do JSON que vão para a silver (fullname é ignorado)
 CAMPOS_ESPERADOS = {
-    "des", "orbit_id", "jd", "cd", "dist", "dist_min", "dist_max",
-    "v_rel", "v_inf", "t_sigma_f", "h", "diameter", "diameter_sigma",
+    "des",
+    "orbit_id",
+    "jd",
+    "cd",
+    "dist",
+    "dist_min",
+    "dist_max",
+    "v_rel",
+    "v_inf",
+    "t_sigma_f",
+    "h",
+    "diameter",
+    "diameter_sigma",
 }
 
 # Colunas da silver na ordem do INSERT (menos bronze_id)
 COLUNAS = [
-    "des", "orbit_id", "jd", "cd", "dist", "dist_min", "dist_max",
-    "v_rel", "v_inf", "t_sigma_f", "h", "diameter", "diameter_sigma",
+    "des",
+    "orbit_id",
+    "jd",
+    "cd",
+    "dist",
+    "dist_min",
+    "dist_max",
+    "v_rel",
+    "v_inf",
+    "t_sigma_f",
+    "h",
+    "diameter",
+    "diameter_sigma",
 ]
 
 
@@ -28,18 +50,18 @@ def para_cd(valor):
 def limpar(r: dict) -> dict:
     """Converte uma aproximação (dict campo -> texto) para os tipos da silver."""
     return {
-        "des":            r["des"],
-        "orbit_id":       para_int(r["orbit_id"]),
-        "jd":             para_float(r["jd"]),
-        "cd":             para_cd(r["cd"]),
-        "dist":           para_float(r["dist"]),
-        "dist_min":       para_float(r["dist_min"]),
-        "dist_max":       para_float(r["dist_max"]),
-        "v_rel":          para_float(r["v_rel"]),
-        "v_inf":          para_float(r["v_inf"]),
-        "t_sigma_f":      r["t_sigma_f"],          # fica texto (ex.: '< 00:01')
-        "h":              para_float(r["h"]),
-        "diameter":       para_float(r["diameter"]),         # None se desconhecido
+        "des": r["des"],
+        "orbit_id": para_int(r["orbit_id"]),
+        "jd": para_float(r["jd"]),
+        "cd": para_cd(r["cd"]),
+        "dist": para_float(r["dist"]),
+        "dist_min": para_float(r["dist_min"]),
+        "dist_max": para_float(r["dist_max"]),
+        "v_rel": para_float(r["v_rel"]),
+        "v_inf": para_float(r["v_inf"]),
+        "t_sigma_f": r["t_sigma_f"],  # fica texto (ex.: '< 00:01')
+        "h": para_float(r["h"]),
+        "diameter": para_float(r["diameter"]),  # None se desconhecido
         "diameter_sigma": para_float(r["diameter_sigma"]),
     }
 
@@ -59,18 +81,16 @@ def carregar_silver_cad() -> None:
             bronze_id, campos, dados = cur.fetchone()
 
             # 2) Confere os campos do JSON
-            assert CAMPOS_ESPERADOS <= set(campos), (
-                f"Campos diferentes do esperado: {campos}"
-            )
+            assert CAMPOS_ESPERADOS <= set(campos), f"Campos diferentes do esperado: {campos}"
 
             # 3) Cada linha vira um dict {campo: valor} e é limpa
-            brutos = [dict(zip(campos, linha)) for linha in dados]
+            brutos = [dict(zip(campos, linha, strict=False)) for linha in dados]
             limpos = [limpar(r) for r in brutos]
 
             # 4) des e jd são obrigatórios
-            assert all(l["des"] and l["jd"] is not None for l in limpos), (
-                "Há aproximação sem des ou sem jd"
-            )
+            assert all(
+                l["des"] and l["jd"] is not None for l in limpos
+            ), "Há aproximação sem des ou sem jd"
 
             # 5) Regra do projeto: a conversão não pode criar nulos
             for col in COLUNAS:
@@ -80,6 +100,9 @@ def carregar_silver_cad() -> None:
 
             # 6) Grava (rodar de novo no mesmo snapshot não duplica)
             linhas = [tuple(l[c] for c in COLUNAS) + (bronze_id,) for l in limpos]
+
+            cur.execute("TRUNCATE silver.cad_aproximacao RESTART IDENTITY")
+
             cur.executemany(
                 """
                 INSERT INTO silver.cad_aproximacao (

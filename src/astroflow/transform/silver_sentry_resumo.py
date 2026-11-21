@@ -1,15 +1,27 @@
 # Carga da silver.sentry_resumo (Sentry modo S).
 # Lê o ÚLTIMO snapshot de 'sentry_resumo' na bronze, limpa e grava na silver.
-from datetime import datetime
 
 from astroflow.config import get_connection
 from astroflow.transform.conversores import para_data, para_float, para_int
 
 # Chaves que esperamos em cada item do array "data"
 CHAVES_ESPERADAS = {
-    "id", "des", "fullname", "h", "diameter", "ip", "n_imp", "ps_cum",
-    "ps_max", "ts_max", "v_inf", "last_obs", "last_obs_jd", "range",
+    "id",
+    "des",
+    "fullname",
+    "h",
+    "diameter",
+    "ip",
+    "n_imp",
+    "ps_cum",
+    "ps_max",
+    "ts_max",
+    "v_inf",
+    "last_obs",
+    "last_obs_jd",
+    "range",
 }
+
 
 def separar_range(valor):
     """'2064-2118' -> (2064, 2118). Se vier um ano só, min = max."""
@@ -34,31 +46,33 @@ def carregar_silver_sentry_resumo() -> None:
             bronze_id, itens = cur.fetchone()  # itens já vem como lista Python
 
             # 2) Confere as chaves do JSON
-            assert CHAVES_ESPERADAS <= set(itens[0].keys()), (
-                f"Chaves diferentes do esperado: {set(itens[0].keys())}"
-            )
+            assert CHAVES_ESPERADAS <= set(
+                itens[0].keys()
+            ), f"Chaves diferentes do esperado: {set(itens[0].keys())}"
 
             # 3) Limpa e converte cada item
             linhas = []
             for it in itens:
                 ano_min, ano_max = separar_range(it["range"])
-                linhas.append((
-                    it["des"],
-                    it["id"],
-                    para_float(it["h"]),
-                    para_float(it["diameter"]),
-                    para_float(it["ip"]),
-                    para_int(it["n_imp"]),
-                    para_float(it["ps_cum"]),
-                    para_float(it["ps_max"]),
-                    para_int(it["ts_max"]),
-                    para_float(it["v_inf"]),
-                    para_data(it["last_obs"]),
-                    para_float(it["last_obs_jd"]),
-                    ano_min,
-                    ano_max,
-                    bronze_id,
-                ))
+                linhas.append(
+                    (
+                        it["des"],
+                        it["id"],
+                        para_float(it["h"]),
+                        para_float(it["diameter"]),
+                        para_float(it["ip"]),
+                        para_int(it["n_imp"]),
+                        para_float(it["ps_cum"]),
+                        para_float(it["ps_max"]),
+                        para_int(it["ts_max"]),
+                        para_float(it["v_inf"]),
+                        para_data(it["last_obs"]),
+                        para_float(it["last_obs_jd"]),
+                        ano_min,
+                        ano_max,
+                        bronze_id,
+                    )
+                )
 
             # 4) Regra do projeto: a conversão não pode criar nulos.
             #    Nulos antes = None ou 'NaN'; depois = None. Têm que ser iguais.
@@ -66,6 +80,8 @@ def carregar_silver_sentry_resumo() -> None:
                 antes = sum(1 for it in itens if it[nome] in (None, "NaN"))
                 depois = sum(1 for l in linhas if l[pos] is None)
                 assert antes == depois, f"{nome}: nulos antes={antes}, depois={depois}"
+
+            cur.execute("TRUNCATE silver.sentry_resumo")
 
             # 5) Grava (rodar de novo não duplica)
             cur.executemany(

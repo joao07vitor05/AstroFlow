@@ -1,9 +1,9 @@
-import os
-
-import psycopg
 from dotenv import load_dotenv
 
+from astroflow.config import get_connection
+
 load_dotenv()
+
 
 DDL = """
 CREATE SCHEMA IF NOT EXISTS silver;
@@ -163,18 +163,9 @@ CREATE TABLE IF NOT EXISTS silver.neows_aproximacao (
 CREATE INDEX IF NOT EXISTS ix_sentry_impacto_virtual_des ON silver.sentry_impacto_virtual (des);
 CREATE INDEX IF NOT EXISTS ix_cad_aproximacao_des        ON silver.cad_aproximacao (des);
 CREATE INDEX IF NOT EXISTS ix_cad_aproximacao_cd         ON silver.cad_aproximacao (cd);
-CREATE INDEX IF NOT EXISTS ix_neows_aproximacao_data     ON silver.neows_aproximacao (data_aproximacao);
+CREATE INDEX IF NOT EXISTS ix_neows_aproximacao_data
+ ON silver.neows_aproximacao (data_aproximacao);
 """
-
-
-def get_connection() -> psycopg.Connection:
-    return psycopg.connect(
-        host=os.getenv("POSTGRES_HOST", "localhost"),
-        port=os.getenv("POSTGRES_PORT", "5436"),
-        dbname=os.getenv("POSTGRES_DB"),
-        user=os.getenv("POSTGRES_USER"),
-        password=os.getenv("POSTGRES_PASSWORD"),
-    )
 
 
 def main() -> None:

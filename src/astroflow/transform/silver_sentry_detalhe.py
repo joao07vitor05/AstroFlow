@@ -3,13 +3,26 @@
 # e guarda só os 12 campos do summary que NÃO existem no resumo (modo S).
 from astroflow.config import get_connection
 from astroflow.transform.conversores import (
-    para_data, para_datahora, para_float, para_int,
+    para_data,
+    para_datahora,
+    para_float,
+    para_int,
 )
 
 # Colunas da silver na ordem do INSERT (menos des e bronze_id)
 COLUNAS = [
-    "metodo", "first_obs", "darc_dias", "nobs", "ndel", "ndop",
-    "nsat", "mass", "energy", "v_imp", "cdate", "pdate",
+    "metodo",
+    "first_obs",
+    "darc_dias",
+    "nobs",
+    "ndel",
+    "ndop",
+    "nsat",
+    "mass",
+    "energy",
+    "v_imp",
+    "cdate",
+    "pdate",
 ]
 
 
@@ -23,27 +36,35 @@ def para_darc(valor):
 def limpar(summary: dict) -> dict:
     """Converte os campos de um summary para os tipos da silver."""
     return {
-        "metodo":    summary.get("method"),
+        "metodo": summary.get("method"),
         "first_obs": para_data(summary.get("first_obs")),
         "darc_dias": para_darc(summary.get("darc")),
-        "nobs":      para_int(summary.get("nobs")),
-        "ndel":      para_int(summary.get("ndel")),
-        "ndop":      para_int(summary.get("ndop")),
-        "nsat":      para_int(summary.get("nsat")),   # vem como texto
-        "mass":      para_float(summary.get("mass")),
-        "energy":    para_float(summary.get("energy")),
-        "v_imp":     para_float(summary.get("v_imp")),
-        "cdate":     para_datahora(summary.get("cdate")),
-        "pdate":     para_datahora(summary.get("pdate")),
+        "nobs": para_int(summary.get("nobs")),
+        "ndel": para_int(summary.get("ndel")),
+        "ndop": para_int(summary.get("ndop")),
+        "nsat": para_int(summary.get("nsat")),  # vem como texto
+        "mass": para_float(summary.get("mass")),
+        "energy": para_float(summary.get("energy")),
+        "v_imp": para_float(summary.get("v_imp")),
+        "cdate": para_datahora(summary.get("cdate")),
+        "pdate": para_datahora(summary.get("pdate")),
     }
 
 
 # Nome da chave no JSON para cada coluna (para a checagem de nulos)
 CHAVE_JSON = {
-    "metodo": "method", "first_obs": "first_obs", "darc_dias": "darc",
-    "nobs": "nobs", "ndel": "ndel", "ndop": "ndop", "nsat": "nsat",
-    "mass": "mass", "energy": "energy", "v_imp": "v_imp",
-    "cdate": "cdate", "pdate": "pdate",
+    "metodo": "method",
+    "first_obs": "first_obs",
+    "darc_dias": "darc",
+    "nobs": "nobs",
+    "ndel": "ndel",
+    "ndop": "ndop",
+    "nsat": "nsat",
+    "mass": "mass",
+    "energy": "energy",
+    "v_imp": "v_imp",
+    "cdate": "cdate",
+    "pdate": "pdate",
 }
 
 
@@ -77,10 +98,10 @@ def carregar_silver_sentry_detalhe() -> None:
                 assert antes == depois, f"{col}: nulos antes={antes}, depois={depois}"
 
             # 5) Grava (rodar de novo não duplica)
-            linhas = [
-                (s["des"], *[l[c] for c in COLUNAS], bid)
-                for bid, s, l in limpos
-            ]
+            linhas = [(s["des"], *[l[c] for c in COLUNAS], bid) for bid, s, l in limpos]
+
+            cur.execute("TRUNCATE silver.sentry_detalhe")
+
             cur.executemany(
                 """
                 INSERT INTO silver.sentry_detalhe (

@@ -21,25 +21,22 @@ def carregar_silver_sentry_removido() -> None:
             bronze_id, itens = cur.fetchone()
 
             # 2) Confere as chaves do JSON
-            assert CHAVES_ESPERADAS <= set(itens[0].keys()), (
-                f"Chaves diferentes do esperado: {set(itens[0].keys())}"
-            )
+            assert CHAVES_ESPERADAS <= set(
+                itens[0].keys()
+            ), f"Chaves diferentes do esperado: {set(itens[0].keys())}"
 
             # 3) des tem que ser único (é a PK da tabela)
-            assert len({it["des"] for it in itens}) == len(itens), (
-                "Há des repetido no modo R"
-            )
+            assert len({it["des"] for it in itens}) == len(itens), "Há des repetido no modo R"
 
             # 4) Converte 'removed' (UTC, com segundos) para datetime
-            linhas = [
-                (it["des"], para_datahora(it["removed"]), bronze_id)
-                for it in itens
-            ]
+            linhas = [(it["des"], para_datahora(it["removed"]), bronze_id) for it in itens]
 
             # 5) Regra do projeto: a conversão não pode criar nulos
             antes = sum(1 for it in itens if it["removed"] in (None, ""))
             depois = sum(1 for l in linhas if l[1] is None)
             assert antes == depois == 0, f"removed: nulos antes={antes}, depois={depois}"
+
+            cur.execute("TRUNCATE silver.sentry_removido")
 
             # 6) Grava (rodar de novo não duplica)
             cur.executemany(

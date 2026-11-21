@@ -1,12 +1,14 @@
-import os
-from datetime import date, timedelta
-import time
 import json
+import os
+import time
+from datetime import date, timedelta
 
 import psycopg
 import requests
 from dotenv import load_dotenv
 from psycopg.types.json import Jsonb
+
+from astroflow.config import get_connection
 
 load_dotenv()
 
@@ -38,25 +40,20 @@ CREATE TABLE IF NOT EXISTS bronze.neows_lookup_raw (
 """
 
 
-def get_connection() -> psycopg.Connection:
-    return psycopg.connect(
-        host=os.getenv("POSTGRES_HOST", "localhost"),
-        port=os.getenv("POSTGRES_PORT", "5436"),
-        dbname=os.getenv("POSTGRES_DB"),
-        user=os.getenv("POSTGRES_USER"),
-        password=os.getenv("POSTGRES_PASSWORD"),
-    )
-
-
 def fetch_feed(start: date, end: date) -> requests.Response:
     params = {
         "start_date": start.isoformat(),
         "end_date": end.isoformat(),
         "api_key": API_KEY,
     }
-    response = requests.get(BASE_URL, params=params, timeout=30)
-    response.raise_for_status()  # levanta erro se vier 4xx/5xx
+    try:
+        response = requests.get(BASE_URL, params=params, timeout=30)
+        response.raise_for_status()  # levanta erro se vier 4xx/5xx
+    except requests.RequestException as erro:
+        # a mensagem original tem a URL com a api_key, então não a repassamos
+        raise RuntimeError(f"Feed da NeoWs falhou ({type(erro).__name__})") from None
     return response
+
 
 def limpar_chave(texto_resposta: str, api_key: str) -> dict:
     """
@@ -74,7 +71,6 @@ def limpar_chave(texto_resposta: str, api_key: str) -> dict:
 
 
 def save_raw(conn: psycopg.Connection, start: date, end: date, response: requests.Response) -> None:
-
     payload = limpar_chave(response.text, API_KEY)
 
     with conn.cursor() as cur:
@@ -93,7 +89,7 @@ def ids_do_feed(feed_json: dict) -> list[str]:
     """Pega os ids dos asteroides que vieram no feed."""
     # o feed agrupa os asteroides por data: {"2026-11-16": [ast1, ast2], ...}
     ids = []
-    for dia, asteroides in feed_json["near_earth_objects"].items():
+    for _dia, asteroides in feed_json["near_earth_objects"].items():
         for asteroide in asteroides:
             ids.append(asteroide["id"])
     return ids
@@ -124,7 +120,8 @@ def save_lookup(conn: psycopg.Connection, asteroid_id: str, response: requests.R
 def extract_lookup(conn: psycopg.Connection, ids: list[str]) -> None:
     """Busca o lookup de cada asteroide novo e grava na bronze."""
     # só busca o que ainda não temos
-    novos = [i for i in set(ids) if i not in ids_ja_extraidos(conn)]
+    ja_extraidos = ids_ja_extraidos(conn)  # uma consulta só
+    novos = [i for i in set(ids) if i not in ja_extraidos]
     print(f"Lookup: {len(novos)} asteroides novos de {len(set(ids))}")
 
     for asteroid_id in novos:
@@ -162,7 +159,7 @@ def main() -> None:
         with conn.cursor() as cur:
             cur.execute(DDL)
         save_raw(conn, start, end, response)
-        
+
         ids = ids_do_feed(response.json())
         extract_lookup(conn, ids)
 

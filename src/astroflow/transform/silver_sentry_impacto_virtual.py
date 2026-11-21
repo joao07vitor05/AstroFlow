@@ -8,23 +8,28 @@ CHAVES_ESPERADAS = {"des", "date", "ip", "ps", "ts", "energy", "method"}
 
 # Coluna da silver -> chave no JSON (para a checagem de nulos)
 CHAVE_JSON = {
-    "data_impacto": "date", "ip": "ip", "ps": "ps", "ts": "ts",
-    "energy": "energy", "metodo": "method",
-    "sigma_vi": "sigma_vi", "sigma_mc": "sigma_mc",
+    "data_impacto": "date",
+    "ip": "ip",
+    "ps": "ps",
+    "ts": "ts",
+    "energy": "energy",
+    "metodo": "method",
+    "sigma_vi": "sigma_vi",
+    "sigma_mc": "sigma_mc",
 }
 
 
 def limpar(it: dict) -> dict:
     """Converte um registro do array 'data' para os tipos da silver."""
     return {
-        "data_impacto": para_data(it.get("date")),   # '2108-05-24.69' -> só a data
-        "ip":           para_float(it.get("ip")),
-        "ps":           para_float(it.get("ps")),
-        "ts":           para_int(it.get("ts")),      # nulo continua nulo
-        "energy":       para_float(it.get("energy")),
-        "metodo":       it.get("method"),
-        "sigma_vi":     para_float(it.get("sigma_vi")),  # só nos IOBS
-        "sigma_mc":     para_float(it.get("sigma_mc")),  # só nos MC
+        "data_impacto": para_data(it.get("date")),  # '2108-05-24.69' -> só a data
+        "ip": para_float(it.get("ip")),
+        "ps": para_float(it.get("ps")),
+        "ts": para_int(it.get("ts")),  # nulo continua nulo
+        "energy": para_float(it.get("energy")),
+        "metodo": it.get("method"),
+        "sigma_vi": para_float(it.get("sigma_vi")),  # só nos IOBS
+        "sigma_mc": para_float(it.get("sigma_mc")),  # só nos MC
     }
 
 
@@ -59,14 +64,25 @@ def carregar_silver_sentry_impacto_virtual() -> None:
             # 5) Monta as linhas na ordem do INSERT
             linhas = [
                 (
-                    it["des"], posicao,
-                    l["data_impacto"], l["ip"], l["ps"], l["ts"], l["energy"],
-                    l["metodo"], l["sigma_vi"], l["sigma_mc"], bronze_id,
+                    it["des"],
+                    posicao,
+                    l["data_impacto"],
+                    l["ip"],
+                    l["ps"],
+                    l["ts"],
+                    l["energy"],
+                    l["metodo"],
+                    l["sigma_vi"],
+                    l["sigma_mc"],
+                    bronze_id,
                 )
-                for posicao, (it, l) in enumerate(zip(itens, limpos))
+                for posicao, (it, l) in enumerate(zip(itens, limpos, strict=False))
             ]
 
             # 6) Grava (rodar de novo no mesmo snapshot não duplica)
+
+            cur.execute("TRUNCATE silver.sentry_impacto_virtual RESTART IDENTITY")
+
             cur.executemany(
                 """
                 INSERT INTO silver.sentry_impacto_virtual (
