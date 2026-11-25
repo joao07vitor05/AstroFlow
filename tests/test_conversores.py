@@ -3,16 +3,16 @@ from datetime import date, datetime
 
 import pytest
 
-from astroflow.transform.conversores import (
+from astroflow.comum.conversores import (
     para_data,
     para_datahora,
     para_float,
     para_int,
 )
-from astroflow.transform.silver_cad import para_cd
-from astroflow.transform.silver_neows import para_data_hora_neows
-from astroflow.transform.silver_sentry_detalhe import para_darc
-from astroflow.transform.silver_sentry_resumo import separar_range
+from astroflow.asteroides.transform.silver_cad import para_cd
+from astroflow.asteroides.transform.silver_neows import para_data_hora_neows
+from astroflow.asteroides.transform.silver_sentry_detalhe import para_darc
+from astroflow.asteroides.transform.silver_sentry_resumo import separar_range
 
 
 # ---------- para_float ----------

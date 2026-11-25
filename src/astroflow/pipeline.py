@@ -10,8 +10,8 @@ import argparse
 import logging
 import time
 
-from astroflow.extract import extract_jplcad, extract_jplsentry, extract_NeoWs
-from astroflow.transform import (
+from astroflow.asteroides.extract import extract_jplcad, extract_jplsentry, extract_NeoWs
+from astroflow.asteroides.transform import (
     criar_silver,
     silver_asteroide,
     silver_cad,

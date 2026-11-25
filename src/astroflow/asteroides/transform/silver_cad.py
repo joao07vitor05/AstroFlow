@@ -3,7 +3,7 @@
 from datetime import datetime
 
 from astroflow.config import get_connection
-from astroflow.transform.conversores import para_float, para_int
+from astroflow.comum.conversores import para_float, para_int
 
 # Campos do JSON que vão para a silver (fullname é ignorado)
 CAMPOS_ESPERADOS = {

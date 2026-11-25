@@ -2,7 +2,7 @@
 # Lê o ÚLTIMO snapshot de 'sentry_resumo' na bronze, limpa e grava na silver.
 
 from astroflow.config import get_connection
-from astroflow.transform.conversores import para_data, para_float, para_int
+from astroflow.comum.conversores import para_data, para_float, para_int
 
 # Chaves que esperamos em cada item do array "data"
 CHAVES_ESPERADAS = {

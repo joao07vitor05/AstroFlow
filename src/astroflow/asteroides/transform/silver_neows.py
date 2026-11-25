@@ -3,7 +3,7 @@
 from datetime import datetime
 
 from astroflow.config import get_connection
-from astroflow.transform.conversores import (
+from astroflow.comum.conversores import (
     para_data,
     para_datahora,
     para_float,

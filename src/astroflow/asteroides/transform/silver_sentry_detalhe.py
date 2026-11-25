@@ -2,7 +2,7 @@
 # Pega, para cada objeto, o snapshot mais recente de 'sentry_objeto' na bronze
 # e guarda só os 12 campos do summary que NÃO existem no resumo (modo S).
 from astroflow.config import get_connection
-from astroflow.transform.conversores import (
+from astroflow.comum.conversores import (
     para_data,
     para_datahora,
     para_float,

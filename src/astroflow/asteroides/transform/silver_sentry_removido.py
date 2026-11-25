@@ -1,7 +1,7 @@
 # Carga da silver.sentry_removido (Sentry modo R).
 # Lê o ÚLTIMO snapshot de 'sentry_removidos' na bronze.
 from astroflow.config import get_connection
-from astroflow.transform.conversores import para_datahora
+from astroflow.comum.conversores import para_datahora
 
 CHAVES_ESPERADAS = {"des", "removed"}
 
