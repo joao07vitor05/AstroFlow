@@ -1,8 +1,8 @@
 # Carga da silver.sentry_resumo (Sentry modo S).
 # Lê o ÚLTIMO snapshot de 'sentry_resumo' na bronze, limpa e grava na silver.
 
-from astroflow.config import get_connection
 from astroflow.comum.conversores import para_data, para_float, para_int
+from astroflow.config import get_connection
 
 # Chaves que esperamos em cada item do array "data"
 CHAVES_ESPERADAS = {
@@ -46,9 +46,9 @@ def carregar_silver_sentry_resumo() -> None:
             bronze_id, itens = cur.fetchone()  # itens já vem como lista Python
 
             # 2) Confere as chaves do JSON
-            assert CHAVES_ESPERADAS <= set(
-                itens[0].keys()
-            ), f"Chaves diferentes do esperado: {set(itens[0].keys())}"
+            assert CHAVES_ESPERADAS <= set(itens[0].keys()), (
+                f"Chaves diferentes do esperado: {set(itens[0].keys())}"
+            )
 
             # 3) Limpa e converte cada item
             linhas = []

@@ -2,13 +2,13 @@
 # Por enquanto só neows_asteroide; neows_orbita e neows_aproximacao entram depois.
 from datetime import datetime
 
-from astroflow.config import get_connection
 from astroflow.comum.conversores import (
     para_data,
     para_datahora,
     para_float,
     para_int,
 )
+from astroflow.config import get_connection
 
 # Chaves que cada payload do lookup precisa ter
 CHAVES_ESPERADAS = {
@@ -91,9 +91,9 @@ def carregar_neows_asteroide(cur) -> None:
     # 4) Obrigatórios e tipo dos booleanos
     assert all(l["neows_id"] and l["des"] for _, l in limpos), "neows_id/des nulo"
     for col in ("is_pha", "is_sentry_object"):
-        assert all(
-            isinstance(l[col], bool) or l[col] is None for _, l in limpos
-        ), f"{col}: valor que não é booleano"
+        assert all(isinstance(l[col], bool) or l[col] is None for _, l in limpos), (
+            f"{col}: valor que não é booleano"
+        )
 
     # 5) Regra do projeto: a conversão não pode criar nulos
     for col in COLUNAS_ASTEROIDE:
@@ -284,15 +284,15 @@ def carregar_neows_aproximacao(cur) -> None:
     limpos = [(bid, nid, limpar_aprox(b)) for bid, nid, b in brutos]
 
     # 3) Obrigatórios: corpo e epoch_ms (epoch_ms faz parte da chave única)
-    assert all(
-        l["corpo"] and l["epoch_ms"] is not None for _, _, l in limpos
-    ), "Aproximação sem corpo ou sem epoch_ms"
+    assert all(l["corpo"] and l["epoch_ms"] is not None for _, _, l in limpos), (
+        "Aproximação sem corpo ou sem epoch_ms"
+    )
 
     # 4) A chave única não pode ter repetição (senão o ON CONFLICT esconderia linhas)
     chaves = {(nid, l["corpo"], l["epoch_ms"]) for _, nid, l in limpos}
-    assert len(chaves) == len(
-        limpos
-    ), f"Há {len(limpos) - len(chaves)} aproximações repetidas por (neows_id, corpo, epoch_ms)"
+    assert len(chaves) == len(limpos), (
+        f"Há {len(limpos) - len(chaves)} aproximações repetidas por (neows_id, corpo, epoch_ms)"
+    )
 
     # 5) Regra do projeto: a conversão não pode criar nulos
     for col in COLUNAS_APROX:

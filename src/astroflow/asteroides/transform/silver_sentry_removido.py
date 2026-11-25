@@ -1,7 +1,7 @@
 # Carga da silver.sentry_removido (Sentry modo R).
 # Lê o ÚLTIMO snapshot de 'sentry_removidos' na bronze.
-from astroflow.config import get_connection
 from astroflow.comum.conversores import para_datahora
+from astroflow.config import get_connection
 
 CHAVES_ESPERADAS = {"des", "removed"}
 
@@ -21,9 +21,9 @@ def carregar_silver_sentry_removido() -> None:
             bronze_id, itens = cur.fetchone()
 
             # 2) Confere as chaves do JSON
-            assert CHAVES_ESPERADAS <= set(
-                itens[0].keys()
-            ), f"Chaves diferentes do esperado: {set(itens[0].keys())}"
+            assert CHAVES_ESPERADAS <= set(itens[0].keys()), (
+                f"Chaves diferentes do esperado: {set(itens[0].keys())}"
+            )
 
             # 3) des tem que ser único (é a PK da tabela)
             assert len({it["des"] for it in itens}) == len(itens), "Há des repetido no modo R"

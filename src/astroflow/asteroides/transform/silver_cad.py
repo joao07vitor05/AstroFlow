@@ -2,8 +2,8 @@
 # Lê o ÚLTIMO snapshot de 'cad_terra' na bronze (só um, para não duplicar).
 from datetime import datetime
 
-from astroflow.config import get_connection
 from astroflow.comum.conversores import para_float, para_int
+from astroflow.config import get_connection
 
 # Campos do JSON que vão para a silver (fullname é ignorado)
 CAMPOS_ESPERADOS = {
@@ -88,9 +88,9 @@ def carregar_silver_cad() -> None:
             limpos = [limpar(r) for r in brutos]
 
             # 4) des e jd são obrigatórios
-            assert all(
-                l["des"] and l["jd"] is not None for l in limpos
-            ), "Há aproximação sem des ou sem jd"
+            assert all(l["des"] and l["jd"] is not None for l in limpos), (
+                "Há aproximação sem des ou sem jd"
+            )
 
             # 5) Regra do projeto: a conversão não pode criar nulos
             for col in COLUNAS:

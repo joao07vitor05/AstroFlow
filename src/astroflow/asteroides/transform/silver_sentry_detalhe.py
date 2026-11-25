@@ -1,13 +1,13 @@
 # Carga da silver.sentry_detalhe (Sentry modo O).
 # Pega, para cada objeto, o snapshot mais recente de 'sentry_objeto' na bronze
 # e guarda só os 12 campos do summary que NÃO existem no resumo (modo S).
-from astroflow.config import get_connection
 from astroflow.comum.conversores import (
     para_data,
     para_datahora,
     para_float,
     para_int,
 )
+from astroflow.config import get_connection
 
 # Colunas da silver na ordem do INSERT (menos des e bronze_id)
 COLUNAS = [

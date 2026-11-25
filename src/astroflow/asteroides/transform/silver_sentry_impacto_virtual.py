@@ -1,7 +1,7 @@
 # Carga da silver.sentry_impacto_virtual (Sentry modo V).
 # Lê o ÚLTIMO snapshot de 'sentry_vi' na bronze (só um, para não duplicar).
-from astroflow.config import get_connection
 from astroflow.comum.conversores import para_data, para_float, para_int
+from astroflow.config import get_connection
 
 # Chaves que todo registro deve ter (sigma_vi e sigma_mc dependem do método)
 CHAVES_ESPERADAS = {"des", "date", "ip", "ps", "ts", "energy", "method"}
