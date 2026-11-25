@@ -1,4 +1,5 @@
 # Orquestrador: roda a extração (APIs -> bronze) e a transformação (bronze -> silver).
+# e a gold (silver -> modelo dimensional).
 # Não tem lógica de negócio: só chama as funções dos módulos, na ordem certa.
 # Cada passo é independente, então cada um vira uma tarefa do Airflow depois.
 #
@@ -6,6 +7,7 @@
 #   python -m astroflow.pipeline                    # tudo
 #   python -m astroflow.pipeline --etapa extracao   # só APIs -> bronze
 #   python -m astroflow.pipeline --etapa silver     # só bronze -> silver
+#   python -m astroflow.pipeline --etapa gold       # só silver -> gold
 import argparse
 import logging
 import time
@@ -21,7 +23,13 @@ from astroflow.asteroides.transform import (
     silver_sentry_removido,
     silver_sentry_resumo,
 )
-
+from astroflow.asteroides.gold import (
+    criar_gold,
+    gold_dim_asteroide,
+    gold_fact_aprox_cad,
+    gold_fact_aprox_neows,
+    gold_fact_impacto_virtual,
+)
 logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(message)s")
 log = logging.getLogger("astroflow")
 
@@ -48,6 +56,14 @@ SILVER = [
     ("silver_neows", silver_neows.main),
 ]
 
+GOLD = [
+    ("criar_gold", criar_gold.main),  # cria o schema gold, a dimensão e as fatos se não existirem
+    # dimensão primeiro: as fatos precisam da asteroide_sk
+    ("gold_dim_asteroide", gold_dim_asteroide.main),
+    ("gold_fact_aprox_cad", gold_fact_aprox_cad.main),
+    ("gold_fact_aprox_neows", gold_fact_aprox_neows.main),
+    ("gold_fact_impacto_virtual", gold_fact_impacto_virtual.main),
+]
 
 def rodar_passo(nome, funcao) -> None:
     """Roda um passo, mede o tempo e, se falhar, registra e interrompe a pipeline."""
@@ -65,7 +81,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Pipeline AstroFlow")
     parser.add_argument(
         "--etapa",
-        choices=["extracao", "silver", "tudo"],
+        choices=["extracao", "silver", "gold", "tudo"],
         default="tudo",
         help="qual parte rodar (padrão: tudo)",
     )
@@ -76,6 +92,8 @@ def main() -> None:
         passos += EXTRACAO
     if args.etapa in ("silver", "tudo"):
         passos += SILVER
+    if args.etapa in ("gold", "tudo"):
+        passos += GOLD
 
     inicio = time.time()
     for nome, funcao in passos:
