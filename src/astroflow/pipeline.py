@@ -13,6 +13,13 @@ import logging
 import time
 
 from astroflow.asteroides.extract import extract_jplcad, extract_jplsentry, extract_NeoWs
+from astroflow.asteroides.gold import (
+    criar_gold,
+    gold_dim_asteroide,
+    gold_fact_aprox_cad,
+    gold_fact_aprox_neows,
+    gold_fact_impacto_virtual,
+)
 from astroflow.asteroides.transform import (
     criar_silver,
     silver_asteroide,
@@ -23,13 +30,7 @@ from astroflow.asteroides.transform import (
     silver_sentry_removido,
     silver_sentry_resumo,
 )
-from astroflow.asteroides.gold import (
-    criar_gold,
-    gold_dim_asteroide,
-    gold_fact_aprox_cad,
-    gold_fact_aprox_neows,
-    gold_fact_impacto_virtual,
-)
+
 logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(message)s")
 log = logging.getLogger("astroflow")
 
@@ -64,6 +65,7 @@ GOLD = [
     ("gold_fact_aprox_neows", gold_fact_aprox_neows.main),
     ("gold_fact_impacto_virtual", gold_fact_impacto_virtual.main),
 ]
+
 
 def rodar_passo(nome, funcao) -> None:
     """Roda um passo, mede o tempo e, se falhar, registra e interrompe a pipeline."""
